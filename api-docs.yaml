@@ -1,0 +1,1803 @@
+openapi: 3.0.1
+info:
+  title: 얼굴 인식 시스템 API
+  description: |-
+    출퇴근 및 출입 관리를 위한 얼굴 인식 시스템 API 문서입니다.
+
+    ## 공통 응답 형식
+
+    ### 성공 응답
+    ```json
+    {
+      "status": "success",
+      "statusCode": 200,
+      "message": "성공 메시지",
+      "data": [...]
+    }
+    ```
+
+    ### 성공 페이지네이션 포함 응답(페이지네이션은 옵션입니다.)
+    ```json
+    {
+      "status": "success",
+      "statusCode": 2xx,
+      "message": "성공 메시지",
+      "data": [...]
+      "pagination": {
+        "currentPage": x,
+        "totalPages": x,
+        "totalItems": x
+      }
+    }
+    ```
+
+    ### 오류 응답
+    ```json
+    {
+      "status": "error",
+      "statusCode": 4xx/5xx,
+      "message": "오류 메시지",
+      "data": []
+    }
+    ```
+
+    ```
+  contact:
+    name: Yoo_SH
+    email: ads137485@jbnu.ac.kr
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: v1.0.0
+servers:
+- description: 로컬 서버
+tags:
+- name: CommuteLog
+  description: 출퇴근 기록 관련 API
+- name: Employee
+  description: 직원 관리 관련 API
+- name: CommuteTypeLog
+  description: 출퇴근 유형 로그 관련 API
+- name: DoorLog
+  description: 출입 기록 관련 API
+- name: Department
+  description: 부서 관리 API
+- name: CommuteType
+  description: 출퇴근 유형 관리 관련 API
+- name: Embedding
+  description: 얼굴 인식 임베딩 관련 API
+paths:
+  /api/employee/{employeeId}:
+    get:
+      tags:
+      - Employee
+      summary: 직원 상세 조회
+      description: 특정 직원의 상세 정보를 조회합니다.
+      operationId: getEmployeeById
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: 직원 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example: |2
+                    {
+                      "status": "success",
+                      "statusCode": 200,
+                      "message": "사원 정보를 성공적으로 조회했습니다.",
+                      "data": {
+                        "id": 1,
+                        "name": "홍길동",
+                        "email": "hong@example.com",
+                        "phoneNumber": "010-1234-5678",
+                        "callNumber": "02-123-4567",
+                        "extensionNumber": "1001",
+                        "companyFax": "02-123-4568",
+                        "imageUrl": "http://example.com/images/hong.jpg",
+                        "department": 10
+                        }
+                      }
+                    }
+        "404":
+          description: 직원 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 사원 정보를 찾을 수 없습니다.
+    put:
+      tags:
+      - Employee
+      summary: 직원 정보 수정
+      description: 기존 직원의 정보를 수정합니다.
+      operationId: updateEmployee
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        description: 직원 수정 정보
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Employee'
+            example:
+              name: 김철수(수정)
+              email: kim_updated@example.com
+              phoneNumber: 010-2345-6789
+              callNumber: 02-234-5678
+              extensionNumber: "1002"
+              companyFax: 02-234-5679
+              imageUrl: http://example.com/images/kim_new.jpg
+              department: 4
+        required: true
+      responses:
+        "404":
+          description: 직원 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 사원 정보를 찾을 수 없습니다.
+                data: null
+                pagination: null
+        "200":
+          description: 직원 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 사원 정보를 성공적으로 수정했습니다.
+                data:
+                  id: 2
+                  name: 김철수(수정)
+                  email: kim_updated@example.com
+                  phoneNumber: 010-2345-6789
+                  callNumber: 02-234-5678
+                  extensionNumber: "1002"
+                  companyFax: 02-234-5679
+                  imageUrl: http://example.com/images/kim_new.jpg
+                  department: 4
+    delete:
+      tags:
+      - Employee
+      summary: 직원 삭제
+      description: 특정 직원의 정보를 삭제합니다. (관리자 권한 필요)
+      operationId: deleteEmployee
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: 직원 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 사원 정보를 찾을 수 없습니다.
+                data: null
+                pagination: null
+        "200":
+          description: 직원 삭제 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 사원 정보를 성공적으로 삭제했습니다.
+                data: 1
+                pagination: null
+  /api/embedding/{id}:
+    get:
+      tags:
+      - Embedding
+      summary: 얼굴 임베딩 상세 조회
+      description: 특정 얼굴 임베딩의 상세 정보를 조회합니다.
+      operationId: getEmbeddingById
+      parameters:
+      - name: id
+        in: path
+        description: 얼굴 임베딩 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: 임베딩 상세 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 임베딩을 성공적으로 조회했습니다.
+                data:
+                  id: 1
+                  employeeId: 1
+                  embeddingData: "[0.12, 0.34, 0.56, ...]"
+                  createdAt: 2023-11-01T12:34:56
+        "404":
+          description: 임베딩 데이터 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 임베딩을 찾을 수 없습니다.
+    put:
+      tags:
+      - Embedding
+      summary: 얼굴 임베딩 수정
+      description: 특정 얼굴 임베딩의 정보를 수정합니다. (관리자 권한 필요)
+      operationId: updateEmbeddingById
+      parameters:
+      - name: id
+        in: path
+        description: 얼굴 임베딩 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutUpdateEmbeddingByIdRequestDto'
+        required: true
+      responses:
+        "400":
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 400
+                message: 유효하지 않은 임베딩 데이터입니다.
+        "404":
+          description: 임베딩 데이터 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 임베딩을 찾을 수 없습니다.
+        "200":
+          description: 임베딩 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 임베딩을 성공적으로 수정했습니다.
+                data:
+                  id: 1
+                  employeeId: 1
+                  embeddingData: "[0.22, 0.44, 0.66, ...]"
+                  createdAt: 2023-11-01T12:34:56
+                  updatedAt: 2023-11-03T15:30:25
+  /api/department/{id}:
+    get:
+      tags:
+      - Department
+      summary: 부서 상세 조회
+      description: 부서 ID로 특정 부서의 상세 정보를 조회합니다.
+      operationId: getDepartmentById
+      parameters:
+      - name: id
+        in: path
+        description: 부서 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: 부서 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 부서를 성공적으로 조회했습니다.
+                data:
+                  id: 30
+                  name: 사업지원그룹
+                  role: 사업지원
+                  memo: 사업 행정 지원
+                  parent: 10
+        "404":
+          description: 부서 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 부서를 찾을 수 없습니다.
+    put:
+      tags:
+      - Department
+      summary: 부서 정보 수정
+      description: 기존 부서의 정보를 수정합니다.
+      operationId: updateDepartment
+      parameters:
+      - name: id
+        in: path
+        description: 부서 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        description: 부서 수정 정보
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutUpdateDepartmentRequestDto'
+            example:
+              name: 수정된 부서명
+              role: 수정된 역할
+              memo: 부서 정보가 수정됨
+              parentId: 4
+        required: true
+      responses:
+        "404":
+          description: 부서 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 부서를 찾을 수 없습니다.
+        "200":
+          description: 부서 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 부서를 성공적으로 수정했습니다.
+                data:
+                  id: 35
+                  name: 수정된 부서명
+                  role: 수정된 역할
+                  memo: 부서 정보가 수정됨
+                  parent: 4
+    delete:
+      tags:
+      - Department
+      summary: 부서 삭제
+      description: 부서를 삭제합니다. (관리자 권한 필요)
+      operationId: deleteDepartment
+      parameters:
+      - name: id
+        in: path
+        description: 부서 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: 부서 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 부서를 찾을 수 없습니다.
+        "200":
+          description: 부서 삭제 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 부서를 성공적으로 삭제했습니다.
+  /api/employee:
+    get:
+      tags:
+      - Employee
+      summary: 모든 직원 조회
+      description: 모든 직원의 정보를 페이지네이션과 함께 조회합니다.
+      operationId: getAllEmployees
+      parameters:
+      - name: paginationRequestDto
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "404":
+          description: 직원 목록 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 존재하지 않는 사원입니다.
+        "200":
+          description: 직원 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 사원 목록을 성공적으로 조회했습니다.
+                data:
+                - id: 1
+                  name: 홍길동
+                  email: hong@example.com
+                  phoneNumber: 010-1234-5678
+                  callNumber: 02-123-4567
+                  extensionNumber: "1001"
+                  companyFax: 02-123-4568
+                  imageUrl: http://example.com/images/hong.jpg
+                  department: 10
+                - id: 2
+                  name: 김철수
+                  email: kim@example.com
+                  phoneNumber: 010-2345-6789
+                  callNumber: 02-234-5678
+                  extensionNumber: "1002"
+                  companyFax: 02-234-5679
+                  imageUrl: http://example.com/images/kim.jpg
+                  department: 4
+                pagination:
+                  currentPage: 0
+                  totalPages: 5
+                  totalElements: 50
+    post:
+      tags:
+      - Employee
+      summary: 직원 생성
+      description: 새로운 직원 정보를 생성합니다.
+      operationId: createEmployee
+      requestBody:
+        description: 직원 생성 정보
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Employee'
+            example:
+              name: 박지민
+              email: park@example.com
+              phoneNumber: 010-9876-5432
+              callNumber: 02-987-6543
+              extensionNumber: "1051"
+              companyFax: 02-987-6544
+              imageUrl: http://example.com/images/park.jpg
+              department: 30
+        required: true
+      responses:
+        "400":
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 400
+                message: 잘못된 요청 파라미터입니다.
+        "201":
+          description: 직원 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example: |2
+                    {
+                      "status": "success",
+                      "statusCode": 201,
+                      "message": "사원 정보를 성공적으로 생성했습니다.",
+                      "data": {
+                        "id": 51,
+                        "name": "박지민",
+                        "email": "park@example.com",
+                        "phoneNumber": "010-9876-5432",
+                        "callNumber": "02-987-6543",
+                        "extensionNumber": "1051",
+                        "companyFax": "02-987-6544",
+                        "imageUrl": "http://example.com/images/park.jpg",
+                        "department": 30
+                        }
+                      }
+                    }
+  /api/door-log/employee/{employeeId}:
+    get:
+      tags:
+      - DoorLog
+      summary: 직원별 출입 기록 조회
+      description: 특정 직원의 출입 기록을 페이지네이션과 함께 조회합니다.
+      operationId: getDoorLogByEmployeeId
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: paginationRequest
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "200":
+          description: 출입 기록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example: |2
+                    {
+                      "status": "success",
+                      "statusCode": 200,
+                      "message": "출입 기록을 성공적으로 조회했습니다.",
+                      "data": [
+                        {
+                          "id": 1,
+                          "doorId": "DOOR_101",
+                          "logTime": "2023-11-01T09:00:00",
+                          "isEntry": true,
+                          "memo": "정상 출입",
+                          "employee": 1
+                        },
+                        {
+                          "id": 2,
+                          "doorId": "DOOR_101",
+                          "logTime": "2023-11-01T18:00:00",
+                          "isEntry": false,
+                          "memo": "정상 퇴실",
+                          "employee": 1
+                          }
+                        }
+                      ],
+                      "pagination": {
+                        "currentPage": 0,
+                        "totalPages": 5,
+                        "totalElements": 50
+                      }
+                    }
+        "404":
+          description: 출입 기록 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 해당 사원의 출입 기록이 존재하지 않습니다.
+    post:
+      tags:
+      - DoorLog
+      summary: 출입문 기록 생성
+      description: 특정 직원의 출입문 기록을 생성합니다.
+      operationId: createDoorLogByEmployeeId
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        description: 출입 로그 생성 정보
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreateDoorLogByEmployeeIdRequestDto'
+            example:
+              type: check_in
+              timestamp: 2024-05-02T09:05:34
+              imageUrl: http://example.com/placeholder.jpg
+              floorNumber: 4
+        required: true
+      responses:
+        "404":
+          description: 직원 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 사원을 찾을 수 없습니다.
+        "400":
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 400
+                message: 잘못된 요청 형식입니다. 필수 필드가 누락되었습니다.
+        "201":
+          description: 출입 기록 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 201
+                message: 출입 로그를 성공적으로 생성했습니다.
+                data:
+                  id: 7
+                  employee_id: 1
+                  type: check_in
+                  timeStamp: 2024-05-02T09:05:34
+                  imageUrl: http://example.com/placeholder.jpg
+                  floorNumber: 4
+  /api/department:
+    get:
+      tags:
+      - Department
+      summary: 부서 목록 조회
+      description: 모든 부서 정보를 페이지네이션과 함께 조회합니다.
+      operationId: getAllDepartments
+      parameters:
+      - name: paginationRequestDto
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "200":
+          description: 부서 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 부서 목록을 성공적으로 조회했습니다.
+                data:
+                - id: 1
+                  name: 대표이사
+                  role: 최고경영자
+                  memo: 회사 전체 업무 총괄
+                  parent: null
+                - id: 3
+                  name: 사업부문
+                  role: 사업총괄
+                  memo: 사업 전략 수립 및 실행
+                  parent: 1
+                - id: 4
+                  name: 영업부문
+                  role: 영업총괄
+                  memo: 영업 및 마케팅 활동
+                  parent: 1
+                - id: 10
+                  name: BS본부
+                  role: 비즈니스 솔루션
+                  memo: 비즈니스 솔루션 개발
+                  parent: 3
+                - id: 30
+                  name: 사업지원그룹
+                  role: 사업지원
+                  memo: 사업 행정 지원
+                  parent: 10
+                pagination:
+                  currentPage: 0
+                  totalPages: 2
+                  totalElements: 10
+        "400":
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 400
+                message: 유효하지 않은 페이지 사이즈 또는 페이지 번호 파라미터입니다.
+    post:
+      tags:
+      - Department
+      summary: 부서 생성
+      description: 새로운 부서를 생성합니다.
+      operationId: createDepartment
+      requestBody:
+        description: 부서 생성 정보
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreateDepartmentRequestDto'
+            example:
+              name: 신규부서
+              role: 신규역할
+              memo: 신규부서 생성
+              parentId: 4
+        required: true
+      responses:
+        "201":
+          description: 부서 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 201
+                message: 부서를 성공적으로 생성했습니다.
+                data:
+                  id: 36
+                  name: 신규부서
+                  role: 신규역할
+                  memo: 신규부서 생성
+                  parent: 4
+        "400":
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 400
+                message: 잘못된 요청 파라미터입니다.
+  /api/commute-log/employee/{employeeId}:
+    get:
+      tags:
+      - CommuteLog
+      summary: 직원별 출퇴근 기록 조회
+      description: 특정 직원의 출퇴근 기록을 페이지네이션과 함께 조회합니다.
+      operationId: getCommuteLogsByEmployeeId
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: paginationRequest
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "200":
+          description: 출퇴근 기록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 출퇴근 기록을 성공적으로 조회했습니다.
+                data:
+                - id: 1
+                  checkIn: 09:00:00
+                  checkOut: 18:00:00
+                  workDate: 2023-11-01
+                  isLated: false
+                  reason: null
+                  employee: 1
+                - id: 2
+                  checkIn: 08:50:00
+                  checkOut: 18:30:00
+                  workDate: 2023-11-02
+                  isLated: false
+                  reason: null
+                  employee: 1
+                pagination:
+                  currentPage: 0
+                  totalPages: 10
+                  totalElements: 100
+        "404":
+          description: 출퇴근 기록 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 출퇴근 기록이 존재하지 않습니다.
+    post:
+      tags:
+      - CommuteLog
+      summary: 출퇴근 기록 생성
+      description: 특정 직원의 출퇴근 기록을 생성합니다.
+      operationId: createCommuteLogByEmployeeId
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        description: 출퇴근 기록 생성 정보
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreateCommuteLogByEmployeeIdRequestDto'
+            example:
+              checkIn: 09:05:00
+              checkOut: 18:10:00
+              workDate: 2023-11-15
+              reason: 교통 체증
+              isLated: true
+              commuteType: A
+        required: true
+      responses:
+        "404":
+          description: 직원 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 사원을 찾을 수 없습니다.
+        "201":
+          description: 출퇴근 기록 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 201
+                message: 출퇴근 기록을 성공적으로 생성했습니다.
+                data:
+                  id: 101
+                  checkIn: 09:05:00
+                  checkOut: 18:10:00
+                  workDate: 2023-11-15
+                  isLated: true
+                  reason: 교통 체증
+                  employee: 1
+  /api/commute-log/{id}/reason:
+    patch:
+      tags:
+      - CommuteLog
+      summary: 출퇴근 사유 수정
+      description: 특정 출퇴근 기록의 사유를 수정합니다.
+      operationId: updateCommuteLogReason
+      parameters:
+      - name: id
+        in: path
+        description: 출퇴근 기록 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        description: 출퇴근 사유 수정 정보
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchUpdateCommuteLogReasonRequestDto'
+            example:
+              reason: 도로 공사로 인한 교통 체증
+        required: true
+      responses:
+        "200":
+          description: 출퇴근 사유 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 출퇴근 기록을 성공적으로 수정했습니다.
+                data:
+                  id: 101
+                  checkIn: 09:05:00
+                  checkOut: 18:10:00
+                  workDate: 2023-11-15
+                  isLated: true
+                  reason: 도로 공사로 인한 교통 체증
+                  employee: 1
+        "404":
+          description: 출퇴근 기록 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 출퇴근 기록을 찾을 수 없습니다.
+  /api/embedding:
+    get:
+      tags:
+      - Embedding
+      summary: 모든 얼굴 임베딩 조회
+      description: 모든 얼굴 임베딩 정보를 페이지네이션과 함께 조회합니다.
+      operationId: getEmbedding
+      parameters:
+      - name: paginationRequestDto
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "404":
+          description: 임베딩 데이터 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 임베딩이 존재하지 않습니다.
+        "200":
+          description: 임베딩 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 임베딩 목록을 성공적으로 조회했습니다.
+                data:
+                - id: 1
+                  employeeId: 1
+                  embeddingData: "[0.12, 0.34, 0.56, ...]"
+                  createdAt: 2023-11-01T12:34:56
+                - id: 2
+                  employeeId: 2
+                  embeddingData: "[0.23, 0.45, 0.67, ...]"
+                  createdAt: 2023-11-02T10:20:30
+                pagination:
+                  currentPage: 0
+                  totalPages: 5
+                  totalElements: 50
+  /api/embedding/employee/{employeeId}:
+    get:
+      tags:
+      - Embedding
+      summary: 직원별 얼굴 임베딩 조회
+      description: 특정 직원의 얼굴 임베딩 정보를 조회합니다.
+      operationId: getEmbeddingByEmployeeId
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: 임베딩 데이터 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 임베딩을 찾을 수 없습니다.
+        "200":
+          description: 직원별 임베딩 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 임베딩을 성공적으로 조회했습니다.
+                data:
+                  id: 1
+                  employeeId: 1
+                  embeddingData: "[0.12, 0.34, 0.56, ...]"
+                  createdAt: 2023-11-01T12:34:56
+  /api/door-log:
+    get:
+      tags:
+      - DoorLog
+      summary: 모든 출입 기록 조회
+      description: 모든 출입 기록을 페이지네이션과 함께 조회합니다.
+      operationId: getAllDoorLog
+      parameters:
+      - name: paginationRequest
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "404":
+          description: 출입 기록 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 출입 기록이 존재하지 않습니다.
+        "200":
+          description: 출입 기록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example: |2
+                    {
+                      "status": "success",
+                      "statusCode": 200,
+                      "message": "출입 기록을 성공적으로 조회했습니다.",
+                      "data": [
+                        {
+                          "id": 1,
+                          "doorId": "DOOR_101",
+                          "logTime": "2023-11-01T09:00:00",
+                          "isEntry": true,
+                          "memo": "정상 출입",
+                          "employee": 1
+                        },
+                        {
+                          "id": 2,
+                          "doorId": "DOOR_101",
+                          "logTime": "2023-11-01T18:00:00",
+                          "isEntry": false,
+                          "memo": "정상 퇴실",
+                          "employee": 1
+                          }
+                        }
+                      ],
+                      "pagination": {
+                        "currentPage": 0,
+                        "totalPages": 10,
+                        "totalElements": 100
+                      }
+                    }
+  /api/door-log/employee/{employeeId}/date:
+    get:
+      tags:
+      - DoorLog
+      summary: 직원별 날짜별 출입 기록 조회
+      description: 특정 직원의 특정 날짜 범위의 출입 기록을 페이지네이션과 함께 조회합니다.
+      operationId: getDoorLogByEmployeeIdAndDate
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: startDate
+        in: query
+        description: 시작 날짜 (YYYY-MM-DD)
+        required: true
+        schema:
+          type: string
+      - name: endDate
+        in: query
+        description: 종료 날짜 (YYYY-MM-DD)
+        required: false
+        schema:
+          type: string
+      - name: paginationRequest
+        in: query
+        description: 페이지네이션 정보
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+        examples:
+          사용자 정의 페이지네이션:
+            summary: "페이지 크기 20, 두 번째 페이지, 타임스탬프로 정렬"
+            description: 사용자 정의 페이지네이션
+            value: "page=1&size=20&sort=timeStamp,desc"
+          기본 페이지네이션:
+            summary: "페이지 크기 10, 첫 번째 페이지"
+            description: 기본 페이지네이션
+            value: "page=0&size=10&sort=id,desc"
+      responses:
+        "404":
+          description: 출입 기록 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 해당 기간의 출입 기록이 존재하지 않습니다.
+        "200":
+          description: 출입 기록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example: |2
+                    {
+                      "status": "success",
+                      "statusCode": 200,
+                      "message": "출입 기록을 성공적으로 조회했습니다.",
+                      "data": [
+                        {
+                          "id": 1,
+                          "doorId": "DOOR_101",
+                          "logTime": "2023-11-01T09:00:00",
+                          "isEntry": true,
+                          "memo": "정상 출입",
+                          "employee": 1
+                        },
+                        {
+                          "id": 2,
+                          "doorId": "DOOR_101",
+                          "logTime": "2023-11-01T18:00:00",
+                          "isEntry": false,
+                          "memo": "정상 퇴실",
+                          "employee": 1
+                          }
+                        }
+                      ],
+                      "pagination": {
+                        "currentPage": 0,
+                        "totalPages": 2,
+                        "totalElements": 15
+                      }
+                    }
+  /api/commute-type:
+    get:
+      tags:
+      - CommuteType
+      summary: 모든 출퇴근 유형 조회
+      description: 모든 출퇴근 유형의 정보를 조회합니다.
+      operationId: getAllCommuteType
+      responses:
+        "200":
+          description: 출퇴근 유형 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 출퇴근 유형 조회 성공
+                data:
+                - id: 1
+                  code: A
+                  checkIn: 09:00:00
+                  checkOut: 18:00:00
+                - id: 2
+                  code: B
+                  checkIn: 10:00:00
+                  checkOut: 19:00:00
+                - id: 3
+                  code: C
+                  checkIn: 08:00:00
+                  checkOut: 17:00:00
+        "404":
+          description: 출퇴근 유형 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 출퇴근 유형이 존재하지 않습니다.
+  /api/commute-type-log:
+    get:
+      tags:
+      - CommuteTypeLog
+      summary: 모든 출퇴근 유형 로그 조회
+      description: 모든 출퇴근 유형 로그를 페이지네이션과 함께 조회합니다.
+      operationId: getAllCommuteTypeLog
+      parameters:
+      - name: paginationRequest
+        in: query
+        description: 페이지네이션 요청 정보
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "200":
+          description: 출퇴근 유형 로그 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 근태 기록 목록을 성공적으로 조회했습니다.
+                data:
+                - id: 1
+                  startDate: 2023-11-01
+                  endDate: 2023-11-30
+                  type: NORMAL
+                  memo: 정상 근무
+                  employee:
+                    id: 1
+                    name: 홍길동
+                - id: 2
+                  startDate: 2023-12-01
+                  endDate: 2023-12-15
+                  type: VACATION
+                  memo: 연차 휴가
+                  employee:
+                    id: 1
+                    name: 홍길동
+                pagination:
+                  currentPage: 0
+                  totalPages: 5
+                  totalElements: 50
+        "404":
+          description: 출퇴근 유형 로그 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 출퇴근 타입 로그가 존재하지 않습니다.
+  /api/commute-type-log/employee/{employeeId}:
+    get:
+      tags:
+      - CommuteTypeLog
+      summary: 직원별 출퇴근 유형 로그 조회
+      description: 특정 직원의 출퇴근 유형 로그를 페이지네이션과 함께 조회합니다.
+      operationId: getCommuteTypeLogByEmployeeId
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: paginationRequest
+        in: query
+        description: 페이지네이션 요청 정보
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "200":
+          description: 출퇴근 유형 로그 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 사원의 근태 기록을 성공적으로 조회했습니다.
+                data:
+                - id: 1
+                  startDate: 2023-11-01
+                  endDate: 2023-11-30
+                  type: NORMAL
+                  memo: 정상 근무
+                  employee:
+                    id: 1
+                    name: 홍길동
+                - id: 2
+                  startDate: 2023-12-01
+                  endDate: 2023-12-15
+                  type: VACATION
+                  memo: 연차 휴가
+                  employee:
+                    id: 1
+                    name: 홍길동
+                pagination:
+                  currentPage: 0
+                  totalPages: 2
+                  totalElements: 15
+        "404":
+          description: 출퇴근 유형 로그 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 해당 사원의 출퇴근 타입 로그가 존재하지 않습니다.
+  /api/commute-type-log/employee/{employeeId}/date-range:
+    get:
+      tags:
+      - CommuteTypeLog
+      summary: 직원별 날짜별 출퇴근 유형 로그 조회
+      description: 특정 직원의 특정 날짜 또는 날짜 범위의 출퇴근 유형 로그를 페이지네이션과 함께 조회합니다.
+      operationId: getCommuteTypeLogByEmployeeIdAndDate
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: startDate
+        in: query
+        description: 시작 날짜 (YYYY-MM-DD)
+        required: true
+        schema:
+          type: string
+      - name: endDate
+        in: query
+        description: 종료 날짜 (YYYY-MM-DD)
+        required: false
+        schema:
+          type: string
+      - name: paginationRequest
+        in: query
+        description: 페이지네이션 요청 정보
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "200":
+          description: 출퇴근 유형 로그 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 사원의 기간별 근태 기록을 성공적으로 조회했습니다.
+                data:
+                - id: 1
+                  startDate: 2023-11-01
+                  endDate: 2023-11-30
+                  type: NORMAL
+                  memo: 정상 근무
+                  employee:
+                    id: 1
+                    name: 홍길동
+                pagination:
+                  currentPage: 0
+                  totalPages: 1
+                  totalElements: 1
+        "404":
+          description: 출퇴근 유형 로그 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 해당 기간의 출퇴근 타입 로그가 존재하지 않습니다.
+  /api/commute-log:
+    get:
+      tags:
+      - CommuteLog
+      summary: 모든 출퇴근 기록 조회
+      description: 모든 출퇴근 기록을 페이지네이션과 함께 조회합니다.
+      operationId: getAllCommuteLog
+      parameters:
+      - name: paginationRequest
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "200":
+          description: 출퇴근 기록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: success
+                statusCode: 200
+                message: 출퇴근 기록을 성공적으로 조회했습니다.
+                data:
+                - id: 1
+                  checkIn: 09:00:00
+                  checkOut: 18:00:00
+                  workDate: 2023-11-01
+                  isLated: false
+                  reason: null
+                  employee: 1
+                - id: 2
+                  checkIn: 08:50:00
+                  checkOut: 18:30:00
+                  workDate: 2023-11-02
+                  isLated: false
+                  reason: null
+                  employee: 1
+                pagination:
+                  currentPage: 0
+                  totalPages: 10
+                  totalElements: 100
+        "404":
+          description: 출퇴근 기록 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 출퇴근 기록이 존재하지 않습니다.
+  /api/commute-log/employee/{employeeId}/date-range:
+    get:
+      tags:
+      - CommuteLog
+      summary: 직원별 기간별 출퇴근 기록 조회
+      description: 특정 직원의 특정 기간 동안의 출퇴근 기록을 페이지네이션과 함께 조회합니다.
+      operationId: getCommuteLogByEmployeeIdAndDate
+      parameters:
+      - name: employeeId
+        in: path
+        description: 직원 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: startDate
+        in: query
+        description: 시작 날짜 (YYYY-MM-DD)
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: endDate
+        in: query
+        description: 종료 날짜 (YYYY-MM-DD)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: paginationRequest
+        in: query
+        description: 페이지네이션 요청 정보
+        required: true
+        schema:
+          $ref: '#/components/schemas/PaginationRequestDto'
+      responses:
+        "404":
+          description: 출퇴근 기록 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example:
+                status: error
+                statusCode: 404
+                message: 출퇴근 기록이 존재하지 않습니다.
+        "200":
+          description: 출퇴근 기록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDto'
+              example: |2
+                    {
+                      "status": "success",
+                      "statusCode": 200,
+                      "message": "출퇴근 기록을 성공적으로 조회했습니다.",
+                      "data": [
+                        {
+                          "id": 1,
+                          "checkIn": "09:00:00",
+                          "checkOut": "18:00:00",
+                          "workDate": "2023-11-01",
+                          "isLated": false,
+                          "reason": null,
+                          "employee": 1
+                          }
+                        },
+                        {
+                          "id": 2,
+                          "checkIn": "08:50:00",
+                          "checkOut": "18:30:00",
+                          "workDate": "2023-11-02",
+                          "isLated": false,
+                          "reason": null,
+                          "employee": 1
+                        }
+                      ],
+                      "pagination": {
+                        "currentPage": 0,
+                        "totalPages": 5,
+                        "totalElements": 30
+                      }
+                    }
+components:
+  schemas:
+    Employee:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        department:
+          type: integer
+          format: int32
+        name:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        callNumber:
+          type: string
+        companyFax:
+          type: string
+        extensionNumber:
+          type: string
+        imageUrl:
+          type: string
+    ApiResponseDto:
+      type: object
+      properties:
+        status:
+          type: string
+        statusCode:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          type: object
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          format: int32
+        totalPages:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+    PutUpdateEmbeddingByIdRequestDto:
+      required:
+      - embeddingData
+      type: object
+      properties:
+        embeddingData:
+          type: array
+          description: 임베딩 데이터
+          example: "byte[]"
+          items:
+            type: string
+            description: 임베딩 데이터
+            format: byte
+            example: Ynl0ZVtd
+    PutUpdateDepartmentRequestDto:
+      required:
+      - name
+      - parentId
+      type: object
+      properties:
+        name:
+          type: string
+          description: 부서명
+          example: 영업부
+        role:
+          type: string
+          description: 역할
+          example: 영업팀장
+        memo:
+          type: string
+          description: 메모
+          example: 영업팀장 메모
+        parentId:
+          type: integer
+          description: 상위 부서번호
+          format: int32
+          example: 1
+    PostCreateDoorLogByEmployeeIdRequestDto:
+      required:
+      - imageUrl
+      - type
+      type: object
+      properties:
+        type:
+          pattern: ^(check_in|check_out)$
+          type: string
+          description: 타입
+          example: check_in
+        timestamp:
+          type: string
+          description: 타임스탬프
+          example: 2024-01-01 09:00:00
+        imageUrl:
+          type: string
+          description: 이미지 URL
+          example: https://example.com/image.jpg
+    PostCreateDepartmentRequestDto:
+      required:
+      - name
+      - parentId
+      type: object
+      properties:
+        name:
+          type: string
+          description: 부서명
+          example: 영업부
+        role:
+          type: string
+          description: 역할
+          example: 영업팀장
+        memo:
+          type: string
+          description: 메모
+          example: 영업팀장 메모
+        parentId:
+          type: integer
+          description: 상위 부서번호
+          format: int32
+          example: 1
+    PostCreateCommuteLogByEmployeeIdRequestDto:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: 출퇴근 사유
+          example: 도로 공사로 인한 교통 체증
+        checkIn:
+          type: string
+          description: 출근시간
+          example: 2024-01-01 09:00:00
+        checkOut:
+          type: string
+          description: 퇴근시간
+          example: 2024-01-01 18:00:00
+        workDate:
+          type: string
+          description: 근무일
+          example: 2024-01-01
+        isLated:
+          type: boolean
+          description: 지각여부
+          example: true
+    PatchUpdateCommuteLogReasonRequestDto:
+      required:
+      - reason
+      type: object
+      properties:
+        reason:
+          type: string
+          description: 출퇴근 사유
+          example: 도로 공사로 인한 교통 체증
+    PaginationRequestDto:
+      type: object
+      properties:
+        pageNumber:
+          minimum: 0
+          type: integer
+          description: 페이지 번호
+          format: int32
+          example: 0
+        pageSize:
+          minimum: 1
+          type: integer
+          description: 페이지 사이즈
+          format: int32
+          example: 10
+        orderBy:
+          type: string
+          description: 정렬 기준
+          example: id
+        sortDirection:
+          type: string
+          description: 정렬 방향
+          example: ASC | DESC
+  responses:
+    SuccessResponse:
+      description: 성공 응답
+      content:
+        application/json:
+          examples:
+            성공_응답:
+              summary: 성공 응답
+              description: API 호출 성공 시 응답 형식
+              value:
+                data: []
+                status: success
+                message: 성공메시지
+                statusCode: 2xx
+    ErrorResponse:
+      description: 오류 응답
+      content:
+        application/json:
+          examples:
+            오류_응답:
+              summary: 오류 응답
+              description: API 호출 실패 시 응답 형식
+              value:
+                data: []
+                status: error
+                message: 오류 메시지
+                statusCode: 4xx/5xx
+    PaginationResponse:
+      description: 페이지네이션 응답
+      content:
+        application/json:
+          examples:
+            페이지네이션_응답:
+              summary: 페이지네이션 응답
+              description: 페이지네이션이 포함된 API 호출 성공 시 응답 형식
+              value:
+                message: 성공 메시지
+                pagination:
+                  totalItems: x
+                  totalPages: x
+                  currentPage: "x(default: 0)"
+                data: []
+                status: success
+                statusCode: 2xx
